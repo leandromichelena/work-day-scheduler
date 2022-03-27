@@ -1,16 +1,17 @@
 var schedulerTasks = [];
 
 var listByHour = function (){
-    var hour = moment().set('hour', 9); // Sets the first hour of the day (9 AM)
+    var firstHour = moment().set('hour', 9); // Sets the first hour of the day (9 AM)
     var taskOrderedList = $(".task-list") // Selects the HTML <ol> element with the class="task-list"
     for (i=0; i<9; i++){
         // Creates one list item for each hour of the day. Sets the attribute id="i" for each list item.
         var taskLi = $("<li>").addClass("task-list-item row").attr("id", i);
 
         // Creates one hour marker paragraph element.
-        var hourMarker = $("<p>").addClass("hour col-2 pt-2");
+        var hourMarker = $("<p>").addClass("hour col-1 pt-2");
         // Adds one hour for each interaction of the loop. Format is 9AM to 5PM; 
-        var thisHour = moment(hour).add(i,"h").format("hA");
+        var thisHour = moment(firstHour).add(i,"h").format("hA");
+        var momentHour = moment(firstHour).add(i, "h");
         // Adds the thisHour variable to the paragraph element hourMarker
         hourMarker.text(thisHour);
         
@@ -19,11 +20,26 @@ var listByHour = function (){
         
         taskOrderedList.append(taskLi);
         taskLi.append(hourMarker).append(taskText);
+
+        taskTimeEvaluate(momentHour, taskText);
     };
 };
 
+// Evaluates the current time against when each task is due
+var taskTimeEvaluate = function (momentHour, taskText) {
+    if (moment().isAfter(momentHour)) {
+        $(taskText).addClass("past");
+    };
+    if (moment().isSame(momentHour, "hour")) {
+        $(taskText).addClass("present");
+    }
+    if (moment().isBefore(momentHour)) {
+        $(taskText).addClass("future");
+    }
+};
+
 // Replaces the task-list paragraph with a textarea for editing
-$(".task-list").on("click", "p", function () {
+$(".task-list").on("click", ".task-text", function () {
     var text = $(this)
         .text()
         .trim();
@@ -47,8 +63,6 @@ $(".task-list").on("blur", "textarea", function () {
     var id = $(this)
         .parent()
         .attr("id");
-        console.log("id is " + id);
-        console.log("new task text is " + newText);
         
     // update the schedulerTasks array with the newText from input
     schedulerTasks[id] = newText;
@@ -58,6 +72,9 @@ $(".task-list").on("blur", "textarea", function () {
     var taskP = $("<p>")
         .addClass("task-text col-8 pt-2")
         .text(newText);
+
+    var momentId = moment().set('hour', 9).add(id, "h");
+    taskTimeEvaluate(momentId, taskP);
 
     // replace textarea form with p element
     $(this).replaceWith(taskP);
