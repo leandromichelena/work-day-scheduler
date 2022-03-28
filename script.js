@@ -114,3 +114,7 @@ var loadTasks = function () {
 
 loadTasks();
 listByHour();
+
+setInterval(function () {
+    location.reload(); 
+}, 1800000);
